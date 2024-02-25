@@ -4,8 +4,8 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"time"
 
-	"github.com/gorilla/sessions"
 	"github.com/labstack/echo/v4"
 	"github.com/nedpals/supabase-go"
 
@@ -33,14 +33,12 @@ func Login(c echo.Context) error {
 		)
 	}
 	setAccessToken(c, resp.AccessToken)
-	http.Redirect(c.Response(), c.Request(), "/", http.StatusSeeOther)
+
+	hxRedirect(c, "/")
 	return nil
 }
 
 func RegisterShow(c echo.Context) error {
-	if err := setAccessToken(c, "20"); err != nil {
-		return err
-	}
 	return render(c, auth.Register())
 }
 
@@ -94,15 +92,18 @@ func RegisterCallback(c echo.Context) error {
 		return err
 	}
 	accessToken := fragmentValues.Get("access_token")
-	if err := setAccessToken(c, accessToken); err != nil {
-		return err
-	}
+	setAccessToken(c, accessToken)
 	http.Redirect(c.Response(), c.Request(), "/", http.StatusSeeOther)
 	return nil
 }
 
-func setAccessToken(c echo.Context, accessToken string) error {
-	session := c.Get("session").(*sessions.Session)
-	session.Values[sessionAccessTokenKey] = accessToken
-	return session.Save(c.Request(), c.Response())
+func setAccessToken(c echo.Context, accessToken string) {
+	cookie := new(http.Cookie)
+	cookie.Name = sessionAccessTokenKey
+	cookie.Value = accessToken
+	cookie.Path = "/"
+	cookie.Expires = time.Now().Add(24 * time.Hour)
+	cookie.Secure = true
+	cookie.HttpOnly = true
+	c.SetCookie(cookie)
 }

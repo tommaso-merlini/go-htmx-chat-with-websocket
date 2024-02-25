@@ -1,11 +1,9 @@
 package handler
 
 import (
-	"errors"
 	"net/http"
 	"strings"
 
-	"github.com/gorilla/sessions"
 	"github.com/labstack/echo/v4"
 
 	"roomate/pkg/sb"
@@ -30,7 +28,7 @@ func WithUser(next echo.HandlerFunc) echo.HandlerFunc {
 			Email:      resp.Email,
 			IsLoggedIn: true,
 		}
-		c.Set(types.UserContextKey, user)
+		SetAuthenticatedUser(c, user)
 		return next(c)
 	}
 }
@@ -52,9 +50,9 @@ func WithAuthUser(next echo.HandlerFunc) echo.HandlerFunc {
 }
 
 func getAccessToken(c echo.Context) (string, error) {
-	session, ok := c.Get("session").(*sessions.Session)
-	if !ok {
-		return "", errors.New("session not found")
+	cookie, err := c.Cookie(sessionAccessTokenKey)
+	if err != nil {
+		return "", err
 	}
-	return session.Values[sessionAccessTokenKey].(string), nil
+	return cookie.Value, nil
 }

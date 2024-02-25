@@ -2,7 +2,6 @@ package handler
 
 import (
 	"log/slog"
-	"net/http"
 
 	"github.com/a-h/templ"
 	"github.com/labstack/echo/v4"
@@ -11,7 +10,6 @@ import (
 )
 
 const (
-	sessionUserKey        = "user"
 	sessionAccessTokenKey = "accessToken"
 )
 
@@ -23,12 +21,8 @@ func GetAuthenticatedUser(c echo.Context) types.AuthenticatedUser {
 	return user
 }
 
-func SetAuthenticatedUser(c echo.Context) types.AuthenticatedUser {
-	user, ok := c.Get(types.UserContextKey).(types.AuthenticatedUser)
-	if !ok {
-		return types.AuthenticatedUser{}
-	}
-	return user
+func SetAuthenticatedUser(c echo.Context, user types.AuthenticatedUser) {
+	c.Set(types.UserContextKey, user)
 }
 
 func Make(h echo.HandlerFunc) echo.HandlerFunc {
@@ -46,7 +40,6 @@ func render(c echo.Context, component templ.Component) error {
 	return component.Render(c.Request().Context(), c.Response().Writer)
 }
 
-func hxRedirect(c echo.Context, to string) error {
-	http.Redirect(c.Response(), c.Request(), to, http.StatusSeeOther)
-	return nil
+func hxRedirect(c echo.Context, to string) {
+	c.Response().Header().Set("HX-Redirect", to)
 }

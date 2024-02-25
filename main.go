@@ -4,7 +4,6 @@ import (
 	"embed"
 	"net/http"
 
-	"github.com/gorilla/sessions"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 
@@ -16,8 +15,6 @@ import (
 
 //go:embed public
 var FS embed.FS
-
-var store = sessions.NewCookieStore([]byte("secret"))
 
 func main() {
 	err := initEverything()
@@ -42,7 +39,6 @@ func main() {
 	// 	}
 
 	e := echo.New()
-	e.Use(sessionMiddleware)
 	e.Use(handler.WithUser)
 
 	e.GET("/*", echo.WrapHandler(http.StripPrefix("/", http.FileServer(http.FS(FS)))))
@@ -54,14 +50,12 @@ func main() {
 
 		return c.String(http.StatusOK, "Hello, World!")
 	}))
-
 	e.GET("/login", handler.Make(handler.LoginShow))
 	e.POST("/login", handler.Make(handler.Login))
 	e.GET("/register", handler.Make(handler.RegisterShow))
 	e.POST("/register", handler.Make(handler.Register))
 	e.GET("/login/callback", handler.Make(handler.RegisterCallback))
 	e.GET("/chat", handler.Make(handler.ChatShow))
-
 	e.GET("/chatws", handler.Make(handler.ChatWS))
 
 	e.Logger.Fatal(e.Start(":3000"))
@@ -76,12 +70,4 @@ func initEverything() error {
 		return err
 	}
 	return sb.Init()
-}
-
-func sessionMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		session, _ := store.Get(c.Request(), "session-name")
-		c.Set("session", session)
-		return next(c)
-	}
 }

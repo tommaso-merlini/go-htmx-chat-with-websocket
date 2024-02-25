@@ -1,0 +1,67 @@
+package chat
+
+import "roomate/view/layout"
+import "roomate/sqlc"
+
+templ Chat(messages []sqlc.Message, authID string) {
+	@layout.Base() {
+		<div hx-ext="ws" ws-connect="/chatws">
+			<div id="messages">
+				<h1>Messages</h1>
+				for _, m := range messages {
+					if m.FromAuthid == authID {
+						@Message(m.FromName, "10:20", m.Message, true)
+					} else {
+						@Message(m.FromName, "10:20", m.Message, false)
+					}
+				}
+			</div>
+			<div class="mb-36"></div>
+			@Input("")
+		</div>
+	}
+}
+
+templ Input(text string) {
+	<div hx-swap-oob="innerHTML:#input">
+		<div class="chat-input-container fixed bottom-0 left-0 w-full p-4 shadow-md bg-neutral" id="input">
+			<form ws-send>
+				<div class="flex items-center space-x-2">
+					<input type="text" name="chat_message" value={ text } class="input input-bordered w-full"/>
+					<button type="submit" class="btn btn-accent">Invia</button>
+				</div>
+			</form>
+		</div>
+	</div>
+}
+
+templ Message(name, time, msg string, isRight bool) {
+	<div hx-swap-oob="beforeend:#messages">
+		<div class={ getSide(isRight) }>
+			<div class="chat-image avatar">
+				<div class="w-10 rounded-full">
+					<img alt="Tailwind CSS chat bubble component" src="https://daisyui.com/images/stock/photo-1534528741775-53994a69daeb.jpg"/>
+				</div>
+			</div>
+			<div class="chat-header">
+				{ name }
+				<time class="text-xs opacity-50">{ time }</time>
+			</div>
+			<div class={ getColor(isRight) }>{ msg }</div>
+		</div>
+	</div>
+}
+
+func getSide(isRight bool) string {
+	if isRight {
+		return "chat chat-end px-2"
+	}
+	return "chat chat-start px-2"
+}
+
+func getColor(isRight bool) string {
+	if isRight {
+		return "chat-bubble bg-primary text-black"
+	}
+	return "chat-bubble bg-neutral"
+}

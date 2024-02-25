@@ -1,0 +1,7 @@
+#install tailwind
+npm install -D tailwindcss postcss autoprefixer
+npx tailwindcss init -p
+
+#install daisyui
+npm i -D daisyui@latest
+

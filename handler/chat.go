@@ -55,11 +55,14 @@ func ChatWS(c echo.Context) error {
 			if err != nil {
 				c.Logger().Error(err)
 			}
+			if msg == "" {
+				continue
+			}
 			var jsonMap map[string]interface{}
 			json.Unmarshal([]byte(msg), &jsonMap)
 			message, ok := jsonMap["chat_message"].(string)
 			if !ok {
-				return
+				continue
 			}
 			db.Queries.CreateMessage(context.Background(), sqlc.CreateMessageParams{
 				FromID:     userDB.ID,

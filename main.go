@@ -6,6 +6,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 
 	"roomate/db"
 	"roomate/handler"
@@ -38,6 +39,21 @@ func main() {
 	// 	}
 
 	e := echo.New()
+	e.Use(middleware.CORSWithConfig(
+		middleware.CORSConfig{
+			AllowOrigins: []string{
+				"*",
+			}, // Allow all origins
+			AllowMethods: []string{
+				echo.GET,
+				echo.PUT,
+				echo.POST,
+				echo.DELETE,
+				echo.OPTIONS,
+			}, // Allow common methods
+			AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
+		},
+	))
 	e.Use(handler.WithUser)
 
 	e.GET("/*", echo.WrapHandler(http.StripPrefix("/", http.FileServer(http.FS(FS)))))

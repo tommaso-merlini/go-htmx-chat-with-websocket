@@ -12,17 +12,23 @@ import (
 
 func WithUser(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
+		print(0)
 		if strings.Contains(c.Request().URL.Path, "/public") {
 			return next(c)
 		}
+
+		print(1)
 		accessToken, err := getAccessToken(c)
 		if err != nil {
 			return next(c)
 		}
+
+		print(2)
 		resp, err := sb.Client.Auth.User(c.Request().Context(), accessToken)
 		if err != nil {
 			return next(c)
 		}
+		print(3)
 		user := types.AuthenticatedUser{
 			AuthID:     resp.ID,
 			Email:      resp.Email,

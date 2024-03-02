@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"errors"
 	"net/http"
 
 	"github.com/joho/godotenv"
@@ -15,6 +16,11 @@ import (
 
 //go:embed public
 var FS embed.FS
+var ErrUserNotFound = errors.New("user not found")
+
+func foo() error {
+	return ErrUserNotFound
+}
 
 func main() {
 	err := initEverything()
@@ -22,6 +28,13 @@ func main() {
 		panic(err)
 	}
 	defer db.DB.Close()
+
+	err = foo()
+	if err != nil {
+		if errors.Is(err, ErrUserNotFound) {
+			println("si, user not found")
+		}
+	}
 
 	// 	createTableSQL := `
 	// CREATE TABLE messages (
@@ -48,7 +61,7 @@ func main() {
 			return c.Redirect(http.StatusSeeOther, "/login")
 		}
 
-		return c.String(http.StatusOK, "Hello, World!")
+		return c.Redirect(http.StatusSeeOther, "/chat")
 	}))
 	e.GET("/login", handler.Make(handler.LoginShow))
 	e.POST("/login", handler.Make(handler.Login))
@@ -57,6 +70,8 @@ func main() {
 	e.GET("/login/callback", handler.Make(handler.RegisterCallback))
 	e.GET("/chat", handler.Make(handler.ChatShow))
 	e.GET("/chatws", handler.Make(handler.ChatWS))
+	e.GET("/stream", handler.Make(handler.StreamShow))
+	e.GET("/streamws", handler.Make(handler.StreamWS))
 
 	e.Logger.Fatal(e.Start(":3000"))
 }

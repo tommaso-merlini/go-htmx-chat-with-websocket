@@ -1,0 +1,62 @@
+package chat
+
+templ Stream() {
+	<h1>Camera Stream</h1>
+	<video id="cameraStream" autoplay></video>
+	<h1>Server Stream</h1>
+	<video id="serverStream"></video>
+	<script>
+    const cameraStream = document.getElementById('cameraStream');
+const serverStream = document.getElementById('serverStream');
+
+// Establish WebSocket connection for server stream
+const serverWs = new WebSocket('ws://localhost:3000/streamws');
+
+// When a message is received from the server
+serverWs.onmessage = function(event) {
+    const data = event.data;
+    // Assuming the received data is a blob representing the video frame
+    // You may need to adapt this based on how your server sends the data
+    if (data instanceof Blob) {
+        console.log("Received Blob size:", data.size, "bytes");
+
+        //const blob = new Blob([data], { type: 'video/webm' });
+        const url = URL.createObjectURL(data);
+        serverStream.src = url;
+
+        // Optional: Revoke the object URL to free up resources after it's been used
+        serverStream.onloadedmetadata = () => {
+            URL.revokeObjectURL(url);
+        }; 
+    }
+};
+
+// Handle WebSocket errors
+serverWs.onerror = function(error) {
+    console.error('WebSocket Error:', error);
+};
+
+// Handle WebSocket connection closures
+serverWs.onclose = function(event) {
+    console.log('WebSocket closed', event);
+};
+
+// Get access to the camera
+navigator.mediaDevices.getUserMedia({ video: true })
+    .then(stream => {
+        cameraStream.srcObject = stream;
+
+        // Create MediaRecorder to capture camera stream and send to server
+        const mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.ondataavailable = event => {
+            if (event.data.size > 0) {
+                serverWs.send(event.data);
+            }
+        };
+        mediaRecorder.start(1000); // For every 1000ms of data
+    }).catch(error => {
+        console.error('Error accessing camera:', error);
+    });
+
+    </script>
+}

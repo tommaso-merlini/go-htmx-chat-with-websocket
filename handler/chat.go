@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
 	"net/http"
 	"sync"
 
@@ -39,14 +42,12 @@ func ChatWS(c echo.Context) error {
 	}
 	userDB, err := db.Queries.GetUserByAuthID(context.Background(), user.AuthID)
 	if err != nil {
-		return c.JSON(http.StatusUnauthorized, "Unauthorized")
+		return c.JSON(http.StatusUnauthorized, "")
 	}
-
 	websocket.Handler(func(w *websocket.Conn) {
 		wsMutex.Lock()
 		ws.WSConnections[w] = user
 		wsMutex.Unlock()
-
 		defer w.Close()
 		for {
 			msg := ""
@@ -103,4 +104,42 @@ func broadcast(
 			)
 		}
 	}
+}
+
+func StreamShow(c echo.Context) error {
+	return render(c, chat.Stream())
+}
+
+func StreamWS(c echo.Context) error {
+	user := GetAuthenticatedUser(c)
+	if !user.IsLoggedIn {
+		return c.JSON(http.StatusUnauthorized, "Unauthorized")
+	}
+	// userDB, err := db.Queries.GetUserByAuthID(context.Background(), user.AuthID)
+	// if err != nil {
+	// 	return c.JSON(http.StatusUnauthorized, "Unauthorized")
+	// }
+	websocket.Handler(func(w *websocket.Conn) {
+		wsMutex.Lock()
+		ws.WSConnections[w] = user
+		wsMutex.Unlock()
+		defer w.Close()
+		for {
+			var msg []byte
+			err := websocket.Message.Receive(w, &msg)
+			if err != nil {
+				if errors.Is(err, io.EOF) {
+					break
+				}
+				fmt.Printf("err type: %T\n", err)
+			}
+			for conn := range ws.WSConnections {
+				websocket.Message.Send(
+					conn,
+					msg,
+				)
+			}
+		}
+	}).ServeHTTP(c.Response(), c.Request())
+	return nil
 }

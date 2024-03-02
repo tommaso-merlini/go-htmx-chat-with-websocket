@@ -103,7 +103,7 @@ func setAccessToken(c echo.Context, accessToken string) {
 	cookie.Value = accessToken
 	cookie.Path = "/"
 	cookie.Expires = time.Now().Add(24 * time.Hour)
-	cookie.Secure = true
+	// cookie.Secure = true
 	cookie.HttpOnly = true
 	cookie.Domain = "localhost"
 	c.SetCookie(cookie)

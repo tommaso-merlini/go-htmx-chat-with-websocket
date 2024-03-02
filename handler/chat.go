@@ -54,6 +54,7 @@ func ChatWS(c echo.Context) error {
 			err := websocket.Message.Receive(w, &msg)
 			if err != nil {
 				c.Logger().Error(err)
+				continue
 			}
 			if msg == "" {
 				continue

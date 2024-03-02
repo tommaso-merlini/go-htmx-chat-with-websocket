@@ -58,6 +58,7 @@ func WithAuthUser(next echo.HandlerFunc) echo.HandlerFunc {
 func getAccessToken(c echo.Context) (string, error) {
 	cookie, err := c.Cookie(sessionAccessTokenKey)
 	if err != nil {
+		print(err.Error())
 		return "", err
 	}
 	return cookie.Value, nil

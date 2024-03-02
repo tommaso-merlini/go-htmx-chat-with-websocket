@@ -51,7 +51,12 @@ func main() {
 				echo.DELETE,
 				echo.OPTIONS,
 			}, // Allow common methods
-			AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
+			AllowHeaders: []string{
+				echo.HeaderOrigin,
+				echo.HeaderContentType,
+				echo.HeaderAccept,
+			},
+			AllowCredentials: true,
 		},
 	))
 	e.Use(handler.WithUser)

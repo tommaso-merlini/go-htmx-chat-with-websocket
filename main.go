@@ -2,7 +2,6 @@ package main
 
 import (
 	"embed"
-	"errors"
 	"net/http"
 
 	"github.com/joho/godotenv"
@@ -16,11 +15,6 @@ import (
 
 //go:embed public
 var FS embed.FS
-var ErrUserNotFound = errors.New("user not found")
-
-func foo() error {
-	return ErrUserNotFound
-}
 
 func main() {
 	err := initEverything()
@@ -28,14 +22,6 @@ func main() {
 		panic(err)
 	}
 	defer db.DB.Close()
-
-	err = foo()
-	if err != nil {
-		if errors.Is(err, ErrUserNotFound) {
-			println("si, user not found")
-		}
-	}
-
 	// 	createTableSQL := `
 	// CREATE TABLE messages (
 	//     id   BIGSERIAL PRIMARY KEY,
